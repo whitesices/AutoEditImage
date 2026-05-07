@@ -15,7 +15,9 @@ Environment summary: `汇总.md`
 - Python 3.13.1, venv at `.venv/`, activate with `.venv\Scripts\activate`
 - GPU: NVIDIA RTX 4090 (24GB), CUDA 12.8
 - Key installed versions: torch 2.11.0+cu128, transformers 5.8.0, sam2 1.1.0, opencv-python 4.13.0
-- No git repo initialized yet; `.claude/settings.local.json` is gitignored (contains API key)
+- Git repo with 2 commits on `origin/main`; `.claude/settings.local.json` is gitignored (contains API key)
+- Dependencies: `requirements.txt` (runtime) + `requirements-dev.txt` (adds pytest)
+- `pyproject.toml` configures pytest (test discovery) and ruff (line-length=88, py313)
 
 See `汇总.md` for the full pip list.
 
@@ -45,6 +47,24 @@ python main.py extract-text -i photo.jpg -t "a cat" --no-postprocess
 
 # Run with verbose logging
 python main.py -v extract-text -i photo.jpg -t "a cat"
+
+# Natural-language cut command (UI-agnostic, uses LLM parser if configured)
+python main.py cut -i photo.jpg -n "cut out a man with sword and save to ./my_outputs"
+
+# Launch desktop UI (PySide6)
+python main.py ui
+python main.py ui -i photo.jpg
+
+# Run verification (compile + import smoke + tests)
+python scripts/verify.py --quick          # compile + imports only
+python scripts/verify.py                  # full suite
+python scripts/verify.py --skip-tests     # compile + imports, no tests
+
+# Run tests directly
+python -m unittest discover -s tests                           # all tests
+python -m unittest tests.test_postprocess.TestPostprocess      # single test class
+python -m unittest tests.test_pipeline_helpers                 # pipeline helpers only
+pytest tests/ -q                                               # via pytest (needs requirements-dev.txt)
 
 # Verify imports (no models needed)
 python -c "from src import load_config; print(list(load_config().keys()))"
@@ -101,8 +121,9 @@ If adding new model calls or upgrading transformers, check the actual parameter 
 ## File Responsibilities
 
 ```
+# CLI & Core Pipeline
 configs/config.yaml     — All tunable params (device, model IDs, thresholds, postprocess kernels, output settings)
-main.py                 — Click CLI: extract-text, extract-point, info
+main.py                 — Click CLI: extract-text, extract-point, cut, ui, info
 src/__init__.py         — load_config(path) -> dict
 src/detection/grounded_dino.py   — GroundingDINO class: text → List[DetectedObject]
 src/segmentation/sam_engine.py   — SAM2Engine: set_image() cache, predict() with point/box/mask prompts
@@ -111,4 +132,29 @@ src/postprocess/morph.py         — refine_mask(), mask_to_trimap()
 src/pipeline/extraction_pipeline.py — ExtractionPipeline orchestrator + ExtractedElement/PipelineResult dataclasses
 src/utils/image_utils.py         — load_image(), save_extracted_element(), resize_with_aspect_ratio()
 src/utils/visualization.py       — draw_mask_overlay(), draw_detections(), create_debug_grid()
+
+# Desktop UI (PySide6)
+app/main_window.py      — MainWindow: toolbar, canvas, layer panel, NL command input, LLM settings
+app/canvas_widget.py    — CanvasWidget: image display, zoom/pan, rectangle selection, overlay rendering
+app/layer_panel.py      — LayerPanel: layer list with visibility, rename, delete, export controls
+app/llm_settings_dialog.py — LLMSettingsDialog: API URL/key/model configuration dialog
+core/project.py         — ProjectData: source image + layer stack management
+core/layer.py           — MaskResult, LayerData dataclasses
+core/mask_utils.py      — normalize_mask, mask_to_bbox, apply_mask_to_rgba, clean_mask
+core/image_utils.py     — load_source_image (PIL-based image loading for UI)
+core/exporter.py        — LayerExporter: export layers/masks/project.json/preview to disk
+core/llm_settings_store.py — load/save LLM parser settings as JSON
+core/natural_language_command.py — parse_cut_command() + resolve_cut_command() (regex rules + optional LLM)
+segmenters/base_segmenter.py  — ImageSegmenter abstract protocol
+segmenters/opencv_segmenter.py — OpenCVSegmenter: lightweight GrabCut-based on-canvas segmentation
+
+# Tests
+tests/test_config_and_prompts.py   — load_config() structure, PromptSet chaining/validation
+tests/test_postprocess.py          — refine_mask(), mask_to_trimap()
+tests/test_image_utils.py          — load_image(), resize_with_aspect_ratio(), save_extracted_element()
+tests/test_pipeline_helpers.py     — _select_best_mask(), _select_detections()
+tests/test_ui_smoke.py             — Offscreen MainWindow instantiation (QT_QPA_PLATFORM=offscreen)
+tests/test_layer_core.py           — mask_to_bbox, apply_mask_to_rgba, ProjectData, LayerExporter, OpenCVSegmenter
+tests/test_natural_language_command.py — parse_cut_command() (English & Chinese), resolve_cut_command()
+tests/test_llm_settings_store.py   — save/load LLM settings round-trip
 ```
