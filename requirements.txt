@@ -1,0 +1,30 @@
+# Core ML framework
+torch>=2.5.1
+torchvision>=0.20.1
+
+# Image processing
+opencv-python>=4.9.0
+Pillow>=10.3.0
+numpy>=1.26.0
+
+# Desktop UI
+# PySide6 6.7.x does not support Python 3.13; 6.10.3 is validated in this repo.
+PySide6==6.10.3
+
+# HuggingFace ecosystem
+transformers>=4.47.0
+huggingface-hub>=0.24.0
+accelerate>=0.33.0
+
+# SAM2 specific (Meta's official package)
+sam2>=1.1.0
+
+# Config and CLI
+pyyaml>=6.0
+click>=8.1.0
+
+# Visualization (debugging)
+matplotlib>=3.8.0
+
+# Misc
+tqdm>=4.66.0

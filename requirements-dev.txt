@@ -1,0 +1,5 @@
+-r requirements.txt
+
+# Optional convenience test runner. scripts/verify.py uses stdlib unittest by
+# default so agents can verify the repo without extra dev-only installs.
+pytest>=8.3.0

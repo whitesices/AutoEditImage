@@ -15,6 +15,7 @@
 - 图层支持重命名、显示/隐藏、删除、单层导出、全部导出。
 - UI 中可输入自然语言命令并调用现有 AI 管线生成图层。
 - CLI 和 UI 都支持自然语言切割命令，例如 `cut out a man with sword and save to ./my_outputs`。
+- UI 可配置 OpenAI-compatible LLM 解析器，例如 DeepSeek API，用于把中文命令解析成英文检测目标和位置提示。
 - CLI 支持文本提取、点选提取、图片信息查看。
 - 输出透明 PNG、mask PNG、预览图和 `project.json` 元数据。
 - 模型按需加载，普通 UI 框选分层不需要加载大模型。
@@ -127,15 +128,43 @@ cut out a man with sword and save to ./my_outputs
 
 然后点击 `Run NL Cut`。
 
+如果中文命令解析不理想，可以点击顶部 `LLM Settings`，启用外部 LLM 解析。
+
+推荐 DeepSeek/OpenAI-compatible 配置示例：
+
+```text
+Enable LLM parsing: 勾选
+API URL: https://api.deepseek.com/v1
+Model: deepseek-chat
+API Key: 你的 API Key
+```
+
+程序会请求兼容 OpenAI Chat Completions 的接口：
+
+```text
+POST {API URL}/chat/completions
+```
+
+如果你填写的 API URL 已经是完整 endpoint，例如：
+
+```text
+https://api.deepseek.com/v1/chat/completions
+```
+
+程序会直接使用该 endpoint。
+
 该功能会调用当前项目已有的 AI 管线：
 
 ```text
-自然语言命令 -> 解析目标和导出目录 -> Grounding DINO 检测框 -> SAM2 分割 -> mask -> UI 图层 -> 可选自动导出
+自然语言命令 -> LLM/本地规则解析目标、位置和导出目录 -> Grounding DINO 检测框 -> 按位置筛选 -> SAM2 分割 -> mask -> UI 图层 -> 可选自动导出
 ```
 
 注意：
 
 - 建议使用英文描述，Grounding DINO 对英文目标更稳定。
+- 中文命令建议启用外部 LLM，让它翻译成适合检测模型的英文目标。
+- 位置词会用于筛选检测结果，例如 `左边的人`、`右上角图标`、`中间的角色`。
+- LLM API 失败时会自动回退到本地规则解析。
 - 如果命令中包含 `save/export/output/保存/导出/输出`，UI 会在创建图层后自动导出。
 - 如果命令不包含导出意图，UI 只创建图层，你可以继续手动管理和导出。
 - 首次运行可能下载模型。
@@ -211,6 +240,12 @@ Export/
 
 ```powershell
 .venv\Scripts\python.exe main.py cut -i GAS2.png -n "抠出 a man with sword 导出到 ./my_outputs"
+```
+
+位置命令示例：
+
+```powershell
+.venv\Scripts\python.exe main.py cut -i GAS2.png -n "cut out the right man and save to ./my_outputs"
 ```
 
 如果命令里没有写导出目录，可以用 `-o` 指定 fallback 输出目录：
@@ -388,6 +423,7 @@ PySide6==6.10.3
 - `docs/ui_integration.md`：桌面 UI 集成说明。
 - `docs/adr/0001-agentic-engineering-baseline.md`：Agentic 工程基线 ADR。
 - `docs/adr/0002-desktop-ui-layer-workflow.md`：桌面 UI 图层工作流 ADR。
+- `docs/adr/0003-openai-compatible-llm-parser.md`：OpenAI-compatible LLM 命令解析 ADR。
 
 ## 注意事项
 

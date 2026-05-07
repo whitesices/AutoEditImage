@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -c \"import json,os,sys;d=json.loads(os.environ.get('CLAUDE_TOOL_INPUT','{}'));f=d.get('file_path','');sys.exit(0) if not f or not f.endswith('.py') else None;__import__('py_compile').compile(f,doraise=True)\" 2>&1 || echo \"[HOOK] Syntax check failed\""
+          }
+        ]
+      }
+    ]
+  }
+}

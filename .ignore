@@ -1,0 +1,12 @@
+outputs/
+my_outputs/
+models/
+.test_tmp/
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/

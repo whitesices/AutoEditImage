@@ -1,0 +1,18 @@
+请帮我把当前项目的 PyTorch 安装方式从 CPU 版改为可选 GPU 版，目标环境是 Windows + .venv + NVIDIA GPU + CUDA 12.8 wheel。
+
+要求：
+1. 不破坏当前源码功能。
+2. 保留 CPU fallback 能力。
+3. 新增 requirements-cu128.txt，用于安装 CUDA 12.8 版 torch / torchvision / torchaudio。
+4. 修改 README.md 的安装章节：
+   - 增加 CPU 安装方式
+   - 增加 NVIDIA GPU 安装方式
+   - 增加验证 torch.cuda.is_available() 的命令
+5. 修改项目环境部署文档，说明当前 CPU 版如何切换为 GPU 版。
+6. 如果 requirements.txt 中包含 torch / torchvision / torchaudio，请拆分到 requirements-cu128.txt，避免 pip install -r requirements.txt 覆盖 CUDA 版。
+7. 不要硬编码本机绝对路径。
+8. 修改完成后输出：
+   - Changed files
+   - Install commands
+   - Verification commands
+   - Rollback to CPU commands

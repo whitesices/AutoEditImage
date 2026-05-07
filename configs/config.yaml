@@ -1,0 +1,56 @@
+# ============================================
+# Intelligent Image Element Extractor
+# Configuration
+# ============================================
+
+device:
+  preferred: "cuda"
+  fallback: "cpu"
+
+models:
+  sam2:
+    # "transformers" -> HuggingFace Sam2Model API
+    # "native"       -> Meta's sam2 SAM2ImagePredictor
+    backend: "transformers"
+
+    # HuggingFace hub model ID
+    model_id: "facebook/sam2-hiera-large"
+
+    # Override model_id with local path (null = use Hub)
+    checkpoint_path: null
+
+    inference:
+      multimask_output: false
+      return_logits: true
+      mask_threshold: 0.0
+      pred_iou_thresh: 0.88
+      stability_score_thresh: 0.95
+      stability_score_offset: 1.0
+
+  grounding_dino:
+    model_id: "IDEA-Research/grounding-dino-base"
+    checkpoint_path: null
+    box_threshold: 0.35
+    text_threshold: 0.25
+
+image:
+  max_long_side: 1333
+  force_rgb: true
+
+postprocess:
+  morph:
+    close_kernel_size: 5
+    open_kernel_size: 3
+    min_contour_area_ratio: 0.01
+
+output:
+  default_dir: "./outputs"
+  save_overlay: true
+  overlay_alpha: 0.5
+  save_individual_mask: true
+  save_debug_image: false
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+  file: null
